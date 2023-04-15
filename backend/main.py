@@ -9,6 +9,7 @@ from typing import List, Any
 from pydantic import BaseModel
 from decouple import config
 import openai
+import json
 import ast
 
 # Function imports
@@ -44,6 +45,11 @@ class IMessage(BaseModel):
   role: str
   content: str
 
+# Execute class
+class IExecute(BaseModel):
+  routeId: int
+  messages: list[IMessage]
+
 
 # Check health
 @app.get("/api/health")
@@ -76,6 +82,7 @@ async def route_request(messages: List[IMessage]):
   # Convert routing string response to array
   try:
     msg_list = ast.literal_eval(routing)
+    msg_list[1] = json.dumps(msg_list[1])
   except:
     raise HTTPException(status_code=400, detail="Something went wrong with the reply")
 
@@ -84,9 +91,11 @@ async def route_request(messages: List[IMessage]):
 
 
 # Route confirmation
-@app.get("/api/{item}")
-async def process_request(messages: List[IMessage]):
-  print(item)
+@app.post("/api/execute")
+async def process_request(execution: IExecute):
+  route_id = execution.routeId
+  messages = execution.messages
+  print(route_id)
   print(messages)
 
   # Return routing

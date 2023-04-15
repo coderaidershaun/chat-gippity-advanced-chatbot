@@ -1,6 +1,4 @@
 from openai import ChatCompletion
-import re
-
 
 # Open AI - Chat GPT
 def call_openai(messages, model):
@@ -58,13 +56,13 @@ def confirm_route(message_input):
   }
   system_message_6 = {
     "role": "system", 
-    "content": "If the first number in your response array is not zero, remember NOT to perform the task. Simply just give a brief message that you are working on it."
+    "content": "If the first number in your response array is not zero, remember NOT to perform the task."
   }
   system_message_7 = {
     "role": "system", 
     "content": "You WILL NOT write anything outside of the array mentioned. Just the array."
   }
-
+  
   # Construct messages
   system_messages = [system_message_1, system_message_2, system_message_3, system_message_4, system_message_5, system_message_6, system_message_7]
   message_input.extend(system_messages)
@@ -73,5 +71,5 @@ def confirm_route(message_input):
   routing = call_openai(message_input, "gpt-4")
 
   # Return response
-  print(routing)
+  print("Route Call: ", routing)
   return routing
