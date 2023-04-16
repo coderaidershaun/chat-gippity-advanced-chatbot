@@ -3,7 +3,7 @@
 
 # Main imports
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Any
 from pydantic import BaseModel
@@ -13,7 +13,7 @@ import json
 import ast
 
 # Function imports
-from func_ai import confirm_route
+from func_ai import confirm_route, contruct_system_content
 
 # Get Environment Vars
 openai.organization = config("OPEN_AI_ORG")
@@ -38,6 +38,7 @@ app.add_middleware(
   allow_credentials=True,
   allow_methods=["*"],
   allow_headers=["*"],
+  expose_headers=["Content-Disposition"]
 )
 
 # Message class
@@ -94,9 +95,15 @@ async def route_request(messages: List[IMessage]):
 @app.post("/api/execute")
 async def process_request(execution: IExecute):
   route_id = execution.routeId
-  messages = execution.messages
-  print(route_id)
-  print(messages)
+  messages = [message.dict() for message in execution.messages]
+  if route_id == 0:
+    raise HTTPException(status_code=400, detail="RouteId should not be zero")
 
-  # Return routing
-  return { "response": "hello" }
+  # Get system content
+  system_content, content_type, media_type, file_ext = contruct_system_content(route_id, messages)
+
+  # Return content type
+  if content_type == "f":
+    return FileResponse(system_content, media_type="application/octet-stream", filename=f"file{file_ext}")
+  else:
+    return { "response": "Task complete" }

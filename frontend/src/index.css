@@ -5,3 +5,14 @@
 body {
   margin: 0;
 }
+
+/* Hide scrollbar */
+.hide-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* For Firefox */
+.hide-scrollbar {
+  scrollbar-width: none;
+}

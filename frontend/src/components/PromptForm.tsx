@@ -1,3 +1,5 @@
+import Send from "../assets/send";
+
 type Props = {
   prompt: string;
   errorMsg: string;
@@ -14,7 +16,7 @@ function PromptForm({
   isLoading,
 }: Props) {
   return (
-    <div className="fixed bottom-0 w-full bg-gray-400 border-t">
+    <div className="relative w-full bg-gray-900">
       <form onSubmit={handleSendPrompt}>
         <div
           className={
@@ -26,13 +28,13 @@ function PromptForm({
             type="submit"
             disabled={isLoading}
             className={
-              "transition-all duration-200 hidden w-14 h-full mr-2 p-3 border outline-none appearance-none " +
+              "transition-all duration-200 absolute right-0 w-14 h-full mr-2 p-3 outline-none appearance-none " +
               (prompt.length == 0
-                ? "bg-gray-300 text-gray-500 border-gray-500"
-                : "bg-sky-500 text-white border-sky-700")
+                ? "text-gray-500"
+                : "text-sky-500 hover:text-sky-600")
             }
           >
-            GO
+            <Send />
           </button>
 
           {/* Input */}
@@ -40,7 +42,7 @@ function PromptForm({
             type="text"
             disabled={isLoading}
             className={
-              "px-5 py-3 border w-full placeholder:italic placeholder:text-gray-400 outline-none appearance-none " +
+              "pl-5 py-3 pr-12 border border-gray-600 focus:border-sky-500 rounded w-full text-gray-200 bg-gray-800 placeholder:italic placeholder:text-gray-400 outline-none appearance-none " +
               (isLoading && "animate-pulse")
             }
             placeholder={isLoading ? "chatting..." : "chat..."}
