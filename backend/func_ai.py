@@ -16,10 +16,14 @@ def call_openai(messages, model):
 
 
 # Clean user message for LLM purposes
+def identify_file_ext(string_input):
+  pass
+
+# Clean user message for LLM purposes
 def clean_user_message(message_input):
 
   # Structure system message
-  last_message = message_input[-1]["content"]
+  last_message = message_input[-2]["content"]
   system_message = {
     "role": "system", 
     "content": f"You are a message analyst program. Your job is to re-write sentences to ensure they comply with AI Large Language Models but still perform the underlying work. \
@@ -131,7 +135,7 @@ def confirm_route(message_input):
   messages = [system_message]
 
   # Receive response
-  routing = call_openai(messages, "gpt-3.5-turbo")
+  routing = call_openai(messages, "gpt-4")
 
   # Return response
   print("Task Routing: ", routing)
