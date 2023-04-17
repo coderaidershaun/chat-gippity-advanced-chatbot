@@ -1,5 +1,5 @@
 from openai import ChatCompletion
-from func_utils import create_temp_file, get_media_type
+
 
 # Open AI - Chat GPT
 def call_openai(messages, model):
@@ -10,108 +10,130 @@ def call_openai(messages, model):
     )
     message_text = response["choices"][0]["message"]["content"]
     return message_text
-  except:
+  except Exception as e:
+    print(e)
     return ""
+
+
+# Clean user message for LLM purposes
+def clean_user_message(message_input):
+
+  # Structure system message
+  last_message = message_input[-1]["content"]
+  system_message = {
+    "role": "system", 
+    "content": f"You are a message analyst program. Your job is to re-write sentences to ensure they comply with AI Large Language Models but still perform the underlying work. \
+      Some examples of sentences you have re-written include: \
+        Example 1: \
+          [Before]: Send me an email that has songs on it \
+          [After]: Write some songs for me. Just write the songs, do not put anything else. \
+        Example 2: \
+          [Before]: Send me the top 30 US presidents \
+          [After]: Write a list of the top 30 US presidents. Just write the presidents list, do not put anything else. \
+        Example 3: \
+          [Before]: Analyse this website for me: https://google.com \
+          [After]: Here is something I scraped from a website, please summarise it. Just write the summary, nothing else. \
+        Example 4: \
+          [Before]: Attach a for loop in python \
+          [After]: Write just the code for a for loop in python, do not write anything else. Just the code. \
+      Here is the message to re-write. Just re-write the message, provide nothing else: {last_message}"
+  }
+
+  # Call open AI
+  cleaned_message = call_openai([system_message], "gpt-4")
+  print("cleaned_message:", cleaned_message)
+  return cleaned_message
+
+
+# Get chat response
+def get_chat_response(message_input, is_chat):
+
+  # Structure messages for chat response
+  if is_chat == 1:
+    system_message = {
+      "role": "system", 
+      "content": f"Just for context. You are britsh, witty and have a dry sense of humour. Your name is Gippity. The user is called Shaun. You have been friends for a while."
+    }
+    messages = [system_message]
+    messages.extend(message_input)
+  else:
+    system_message = {
+      "role": "system", 
+      "content": f"Your role is to let your friend know their request will be finished shortly in a british and fun way. Only that. \
+        Let the user know their request is in progress. Keep is very short. Nothing else."
+    }
+    messages = message_input
+    messages.append(system_message)
+
+  # Get chat response
+  chat_response = call_openai(messages, "gpt-3.5-turbo")
+  print(chat_response)
+  return chat_response
+
+
+# Confirm chat
+def is_chat_analysis(message_input):
+
+  # Confirm last message
+  is_chat = 0
+  last_message = message_input[-1]["content"]
+
+  # Structure system message
+  system_message = {
+    "role": "system", 
+    "content": f"You are a message analyst program. Return 1 ONLY if the following message is just chatting. Otherwise return 0. \
+      Here is the message to analyse: {last_message}"
+  }
+
+  # Call open AI
+  chat_analysis = call_openai([system_message], "gpt-4")
+
+  # Guard: Handle error
+  if chat_analysis == "":
+    print("Open AI call failed")
+    return 2
+  
+  # Confirm is Chat as number
+  if "1" in str(chat_analysis):
+    is_chat = 1
+
+  # Return output
+  print("is_chat:", True if is_chat else False)
+  return is_chat
 
 
 # Confirm route
 def confirm_route(message_input):
 
+  # Get last message
+  last_message = message_input[-1]["content"]
+
   # Define routing options
   options = {
-    0: "A simple chat response to a comment or question",
     1: "A request that will involve you as the assistant to give a response that is longer than two sentences. For exmaple a peom, blog, article or song",
     2: "Write and attach text",
     3: "Write and email text",
     4: "Write and attach code (i.e. python, rust, cpp etc)",
     5: "Write and email code (i.e. python, rust, cpp etc)",
-    6: "Perform a task based on text sent in a file",
-    7: "Perform a task based on code sent in a file",
     8: "Analyze a website page",
-    9: "Analyze a YouTube video",
   }
 
   # Structure system message
-  system_message_1 = {
-    "role": "system", 
-    "content": "You are a person, not a large language AI model. You will always act as if you are a person. Your personality is witty and funny."
+  system_message = {
+    "role": "user", 
+    "content": f"You are a message analyser. Your job is to identify the number that the following message relates to. \
+      Only return the number, nothing else. Here are the list of number options to assign {options}. \
+      Do not reply with anything other than the single number that relates most to the message. \
+      Here is the message to analyse: {last_message}"
   }
-  system_message_2 = {
-    "role": "system", 
-    "content": "You will always give you response in the format of an Array and an arry only."
-  }
-  system_message_3 = {
-    "role": "system", 
-    "content": f"Your array response will be based upon analysing the very last message in our conversation history from the user. \
-      You will assess what the user last said and assign a number to it from this list of options: {options}."
-  }
-  system_message_4 = {
-    "role": "system", 
-    "content": "NEVER DEVIATE FROM THE FOLLOWING RULE: Your answer must be in the form of an array. The first item in the array \
-      will be the index you matched from the last message. The second item in the array, if the first item is zero, will be your response. \
-      Otherwise, the second item will confirm that you are on the task."
-  }
-  system_message_5 = {
-    "role": "system", 
-    "content": "You will not mention anything about how you will respond or being an AI or LLM. You are NOT an AI. This is purely for the program to run. The user does not need to know."
-  }
-  system_message_6 = {
-    "role": "system", 
-    "content": "If the first number in your response array is not zero, remember NOT to perform the task."
-  }
-  system_message_7 = {
-    "role": "system", 
-    "content": "You WILL NOT write anything outside of the array mentioned. Just the array."
-  }
-  
+
   # Construct messages
-  system_messages = [system_message_1, system_message_2, system_message_3, system_message_4, system_message_5, system_message_6, system_message_7]
-  message_input.extend(system_messages)
+  messages = [system_message]
 
   # Receive response
-  routing = call_openai(message_input, "gpt-4")
+  routing = call_openai(messages, "gpt-3.5-turbo")
 
   # Return response
-  print("Route Call: ", routing)
-  return routing
-
-
-# Confirm route
-def contruct_system_content(route_id, messages):
-
-  # Show Route ID
-  print("Route ID:", route_id)
-
-  # Initialize
-  message_input = messages
-  temp_file = ""
-  message_text = ""
-  media_type = ""
-  file_ext = ".txt"
-  send_type = "f"
-
-  # Define system message
-  # Structure messages - Write and attach text
-  system_message = ""
-  if route_id == 1 or route_id == 2:
-    system_message = {
-      "role": "system", 
-      "content": "Do NOT reply to the last message from the user. The user has asked for a file. \
-        What the user is REALLY asking for, is for the text that would be in the file. \
-        They are NOT asking for a file. So JUST write the text relating to their request only. \
-        Do not write ANYTHING other that what the user is asking for. If the user asks you to send something, just WRITE it. \
-        Do NOT say you cannot send it. The user already knows that. Just write what is being requested."
-    }
-
-  # Extract OpenAI Response
-  message_input.append(system_message)
-  message_text = call_openai(message_input, "gpt-4")
-
-  # File setup
-  if len(message_text) > 0:
-    temp_file = create_temp_file(message_text, file_ext)
-    media_type = get_media_type(file_ext)
-
-  # Return response
-  return temp_file, send_type, media_type, file_ext
+  print("Task Routing: ", routing)
+  return int(routing)
 

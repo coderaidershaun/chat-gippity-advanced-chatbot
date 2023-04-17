@@ -5,15 +5,15 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Any
+from typing import List
 from pydantic import BaseModel
 from decouple import config
 import openai
-import json
-import ast
+
 
 # Function imports
-from func_ai import confirm_route, contruct_system_content
+from func_ai import confirm_route, is_chat_analysis, clean_user_message, get_chat_response
+from func_tasks import contruct_system_content
 
 # Get Environment Vars
 openai.organization = config("OPEN_AI_ORG")
@@ -75,20 +75,37 @@ async def route_request(messages: List[IMessage]):
   if (len(message_input)) >= 500:
     raise HTTPException(status_code=400, detail="Too many words")
   
-  # Handle routing
+  # Identify chat type
+  is_chat = is_chat_analysis(message_input)
+  if is_chat == 2:
+    raise HTTPException(status_code=400, detail="Error getting Chat")
+
+  # Construct chat response
+  chat_response = get_chat_response(message_input, is_chat)
+  if chat_response == "":
+    raise HTTPException(status_code=400, detail="Error getting chat response")
+
+  # Early: Return early if just chat
+  if is_chat == 1:
+    return { "routing": [0, chat_response] }
+  
+  # Get task routing
   routing = confirm_route(message_input)
   if routing == "":
     raise HTTPException(status_code=400, detail="Failed to receive AI response")
-
-  # Convert routing string response to array
-  try:
-    msg_list = ast.literal_eval(routing)
-    msg_list[1] = json.dumps(msg_list[1])
-  except:
-    raise HTTPException(status_code=400, detail="Something went wrong with the reply")
-
+  
   # Return routing
-  return { "routing": msg_list }
+  return { "routing": [routing, chat_response] }
+
+  # # Convert routing string response to array
+  # try:
+  #   msg_list = ast.literal_eval(routing)
+  #   msg_list[1] = json.dumps(msg_list[1])
+  # except:
+  #   raise HTTPException(status_code=400, detail="Something went wrong with the reply")
+
+  # # Return routing
+  # return { "routing": msg_list }
 
 
 # Route confirmation

@@ -35,7 +35,7 @@ const useCallRoute = () => {
             if (res.data.routing.length > 1) {
               msgs.push({
                 role: BOT_ROLE,
-                content: JSON.parse(res.data.routing[1]),
+                content: res.data.routing[1],
               });
 
               // Provide route ID
