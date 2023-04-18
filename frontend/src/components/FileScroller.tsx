@@ -1,5 +1,5 @@
 import { IBlobDetails } from "../hooks/useCallExecute";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import DownloadSVG from "../assets/download";
 
 type Props = {
@@ -8,12 +8,12 @@ type Props = {
 
 function FileScroller({ files }: Props) {
   const slideInFromRightVariant = {
-    hidden: { x: "100%" },
-    visible: { x: 0, transition: { duration: 0.5, ease: "easeInOut" } },
+    hidden: { y: "100%" },
+    visible: { y: 0, transition: { duration: 0.5, ease: "easeInOut" } },
   };
 
   return (
-    <div className="transition-all duration-300 flex flex-row justify-end w-full overflow-x-scroll hide-scrollbar bg-gray-800">
+    <div className="transition-all duration-300 flex flex-row justify-end w-full overflow-x-scroll hide-scrollbar bg-black border-b border-gray-700">
       {files.map((blb, index) => {
         return (
           <div key={blb.url + index}>
@@ -30,7 +30,7 @@ function FileScroller({ files }: Props) {
                     : "from-green-300 to-sky-500")
                 }
                 href={blb.url}
-                download="file.txt"
+                download={`${blb.filename}.${blb.fileExt}`}
               >
                 <div className="text-sm mt-2 text-gray-700 font-bold">
                   .{blb.fileExt}

@@ -68,7 +68,7 @@ const useCallExecute = () => {
             setFiles(blobs);
 
             // Indicate file is ready
-            msgs.push({ role: "assistant", content: "Here you go" });
+            msgs.push({ role: "assistant", content: "Mums the word..." });
             setMessages(msgs);
           } else {
             console.error("Unsupported content type:", contentType);
@@ -88,7 +88,7 @@ const useCallExecute = () => {
   };
 
   // Return result
-  return { executeTask, files };
+  return { executeTask, files, setFiles };
 };
 
 export default useCallExecute;

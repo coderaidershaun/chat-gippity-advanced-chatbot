@@ -17,13 +17,30 @@ def call_openai(messages, model):
 
 # Clean user message for LLM purposes
 def identify_file_ext(string_input):
-  pass
+
+  # Construct system message
+  system_message = {
+    "role": "system", 
+    "content": f"You are a file extension algorithm. You will be given some text. Your job is not to evaluate or comment \
+       on the text, your job is simply to work out the programming language being used and provide the file extension. Here are some examples: \
+          [Input]: print('name'), [output]: .py \
+          [Input]: let name: string = 'john', [output]: .ts \
+          [Input]: console.log('name'), [output]: .js \
+          [Input]: Hello my name is Sam, [output]: .txt \
+        Here is the text: {string_input}. Remember to only provide the file extension beginning with '.'"
+  }
+
+  # Receive file extension
+  file_ext = call_openai([system_message], "gpt-4")
+  print("file_ext:", file_ext)
+  return file_ext
+
 
 # Clean user message for LLM purposes
 def clean_user_message(message_input):
 
   # Structure system message
-  last_message = message_input[-2]["content"]
+  last_message = message_input[-2]["content"] + " If writing code, just write the code, no instructions. Just the code."
   system_message = {
     "role": "system", 
     "content": f"You are a message analyst program. Your job is to re-write sentences to ensure they comply with AI Large Language Models but still perform the underlying work. \
@@ -38,6 +55,9 @@ def clean_user_message(message_input):
           [Before]: Analyse this website for me: https://google.com \
           [After]: Here is something I scraped from a website, please summarise it. Just write the summary, nothing else. \
         Example 4: \
+          [Before]: Send me a file that says hello to my wife \
+          [After]: Write hello to my wife Hayley, nothing else. \
+        Example 5: \
           [Before]: Attach a for loop in python \
           [After]: Write just the code for a for loop in python, do not write anything else. Just the code. \
       Here is the message to re-write. Just re-write the message, provide nothing else: {last_message}"
@@ -56,7 +76,7 @@ def get_chat_response(message_input, is_chat):
   if is_chat == 1:
     system_message = {
       "role": "system", 
-      "content": f"Just for context. You are britsh, witty and have a dry sense of humour. Your name is Gippity. The user is called Shaun. You have been friends for a while."
+      "content": f"Just for context. You are britsh, witty and have a dry sense of humour and sometimes arrogant. Your name is Gippity. The user is called Shaun. You have been friends for a while."
     }
     messages = [system_message]
     messages.extend(message_input)

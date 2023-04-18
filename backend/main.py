@@ -107,12 +107,10 @@ async def process_request(execution: IExecute):
     raise HTTPException(status_code=400, detail="RouteId should not be zero")
 
   # Get system content
-  contruct_system_content(route_id, messages)
-  return { "response": "Task complete" }
-  # system_content, content_type, media_type, file_ext = contruct_system_content(route_id, messages)
+  system_content, content_type, file_ext = contruct_system_content(route_id, messages)
 
-  # # Return content type
-  # if content_type == "f":
-  #   return FileResponse(system_content, media_type="application/octet-stream", filename=f"file{file_ext}")
-  # else:
-  #   return { "response": "Task complete" }
+  # Return based on content type
+  if content_type == "f":
+    return FileResponse(system_content, media_type="application/octet-stream", filename=f"file{file_ext}")
+  else:
+    return { "response": "Task complete" }
